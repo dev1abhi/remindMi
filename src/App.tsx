@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
-import { Bell, Mail, Phone, MessageSquare, Plus, Trash2, Calendar, Clock, Lock, User } from 'lucide-react';
+import { Mail, Phone, MessageSquare, Plus, Trash2, Calendar, Clock, Lock, User } from 'lucide-react';
+import axios from 'axios';
 import { format } from 'date-fns';
 import type { Alarm } from './types';
 
-function Login({ onLogin }: { onLogin: () => void }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+function Login({ onLogin }: { onLogin: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add actual authentication logic here
-    onLogin();
+    setError("");
+
+    try {
+      const response = await axios.post("http://localhost:5000/users/login", { email, password });
+      localStorage.setItem("token", response.data.token); // Store token for session management
+      onLogin();
+    } catch (err) {
+      console.error(err);
+      setError("Invalid email or password");
+    }
   };
 
   return (
@@ -74,9 +86,35 @@ function MainApp() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  const addAlarm = (alarm: Alarm) => {
-    setAlarms([...alarms, alarm]);
-    setShowForm(false);
+  // const addAlarm = (alarm: Alarm) => {
+  //   //logic for backend call to store the alarm
+  //   setAlarms([...alarms, alarm]);
+  //   setShowForm(false);
+  // };
+
+
+  //makes the backend request
+  const addAlarm = async (alarm: Alarm) => {
+    if (!alarm.notifications?.call) {
+      console.log("Call notification is not enabled, skipping API request.");
+      return;
+    }
+  
+    const alarmData = {
+      phoneNumber: alarm.contactInfo?.phone,
+      alarmTime: alarm.datetime
+    };
+  
+    try {
+      await axios.post("http://localhost:5000/alarms/createCallAlarm", alarmData);
+      console.log("Alarm added successfully");
+  
+      // Optionally update state or UI feedback
+      setAlarms([...alarms, alarm]);
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error adding alarm:", error);
+    }
   };
 
   const deleteAlarm = (id: string) => {
@@ -305,10 +343,15 @@ function AlarmCard({ alarm, onDelete }: { alarm: Alarm, onDelete: (id: string) =
 }
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
   if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
+    //passing the handleLogin function to the Login component
+    return <Login onLogin={handleLogin} />;
   }
 
   return <MainApp />;
