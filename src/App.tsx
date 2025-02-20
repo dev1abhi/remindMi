@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Mail, Phone, MessageSquare, Plus, Trash2, Calendar, Clock, Lock, User } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -83,44 +83,76 @@ function Login({ onLogin }: { onLogin: () => void }) {
 }
 
 function MainApp() {
+ 
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  // const addAlarm = (alarm: Alarm) => {
-  //   //logic for backend call to store the alarm
-  //   setAlarms([...alarms, alarm]);
-  //   setShowForm(false);
-  // };
+  // Function to fetch alarms from backend
+  const fetchAlarms = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // Don't fetch if no user is logged in
 
+     // Make API request to fetch alarms
+    try {
+      const response = await axios.get("http://localhost:5000/alarms/getalarms", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-  //makes the backend request
+      const formattedAlarms = response.data.alarms.map((alarm: Alarm) => ({
+        id: alarm.id,
+        title: alarm.title,
+        datetime: alarm.datetime,
+        notifications: alarm.notifications,
+        contactInfo: alarm.contactInfo
+      }));
+
+      setAlarms(formattedAlarms);
+    } catch (error) {
+      console.error("Error fetching alarms:", error);
+    }
+  };
+
+  // Fetch alarms when component mounts
+  useEffect(() => {
+    fetchAlarms();
+  }, []);
+
+  // Function to add an alarm
   const addAlarm = async (alarm: Alarm) => {
     if (!alarm.notifications?.call) {
       console.log("Call notification is not enabled, skipping API request.");
       return;
     }
-  
-    const alarmData = {
-      phoneNumber: alarm.contactInfo?.phone,
-      alarmTime: alarm.datetime
-    };
-  
+
+    // Make API request to add alarm
     try {
-      await axios.post("http://localhost:5000/alarms/createCallAlarm", alarmData);
-      console.log("Alarm added successfully");
-  
-      // Optionally update state or UI feedback
-      setAlarms([...alarms, alarm]);
+      await axios.post("http://localhost:5000/alarms/createCallAlarm", {
+        title: alarm.title,
+        datetime: alarm.datetime,
+        notifications: alarm.notifications,
+        contactInfo: alarm.contactInfo,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      console.log("Alarm added successfully", alarm);
+      await fetchAlarms(); // Refresh alarms after adding
       setShowForm(false);
     } catch (error) {
       console.error("Error adding alarm:", error);
     }
   };
 
+  //to-do:backend implementation
   const deleteAlarm = (id: string) => {
     setAlarms(alarms.filter(alarm => alarm.id !== id));
   };
 
+
+// MainApp component
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-1 relative">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
