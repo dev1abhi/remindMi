@@ -3,6 +3,7 @@ import { Mail, Phone, MessageSquare, Plus, Trash2, Calendar, Clock, Lock, User }
 import axios from 'axios';
 import { format } from 'date-fns';
 import type { Alarm } from './types';
+import { jwtDecode } from 'jwt-decode';
 
 
 function Login({ onLogin }: { onLogin: () => void }) {
@@ -123,6 +124,8 @@ function MainApp() {
       console.log("Call notification is not enabled, skipping API request.");
       return;
     }
+
+    console.log(localStorage.getItem("token"));
 
     // Make API request to add alarm
     try {
@@ -375,7 +378,29 @@ function AlarmCard({ alarm, onDelete }: { alarm: Alarm, onDelete: (id: string) =
 }
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const decoded: unknown = jwtDecode(token);
+        const isTokenValid = (decoded as { exp: number }).exp * 1000 > Date.now();
+
+        if (!isTokenValid) {
+          localStorage.removeItem("token");
+          setIsLoggedIn(false);
+        } else {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error("Invalid token:", error);
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+      }
+    }
+  }, []);
 
   const handleLogin = () => {
     setIsLoggedIn(true);
