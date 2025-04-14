@@ -1,5 +1,5 @@
 export interface Alarm {
-  id: string;
+  _id?: string;
   title: string;
   datetime: string;
   notifications: {

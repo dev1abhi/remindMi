@@ -100,7 +100,7 @@ function MainApp() {
       });
 
       const formattedAlarms = response.data.alarms.map((alarm: Alarm) => ({
-        id: alarm.id,
+        _id: alarm._id,
         title: alarm.title,
         datetime: alarm.datetime,
         notifications: alarm.notifications,
@@ -119,28 +119,67 @@ function MainApp() {
   }, []);
 
   // Function to add an alarm
+  // const addAlarm = async (alarm: Alarm) => {
+
+
+  //   if (!alarm.notifications?.call) {
+  //     console.log("Call notification is not enabled, skipping API request.");
+  //     return;
+  //   }
+
+  //   console.log(localStorage.getItem("token"));
+
+  //   // Make API request to add alarm
+  //   try {
+  //     await axios.post("http://localhost:5000/alarms/createCallAlarm", {
+  //       title: alarm.title,
+  //       datetime: alarm.datetime,
+  //       notifications: alarm.notifications,
+  //       contactInfo: alarm.contactInfo,
+  //     },
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     });
+
+  //     console.log("Alarm added successfully", alarm);
+  //     await fetchAlarms(); // Refresh alarms after adding
+  //     setShowForm(false);
+  //   } catch (error) {
+  //     console.error("Error adding alarm:", error);
+  //   }
+  // };
   const addAlarm = async (alarm: Alarm) => {
-    if (!alarm.notifications?.call) {
-      console.log("Call notification is not enabled, skipping API request.");
+    const notifications = alarm.notifications;
+  
+    // Check if at least one notification method is enabled
+    const isAnyNotificationEnabled = notifications?.call || notifications?.sms || notifications?.email;
+  
+    if (!isAnyNotificationEnabled) {
+      console.log("No notification methods are enabled, skipping API request.");
       return;
     }
-
+  
     console.log(localStorage.getItem("token"));
-
+  
     // Make API request to add alarm
     try {
-      await axios.post("http://localhost:5000/alarms/createCallAlarm", {
-        title: alarm.title,
-        datetime: alarm.datetime,
-        notifications: alarm.notifications,
-        contactInfo: alarm.contactInfo,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      await axios.post(
+        "http://localhost:5000/alarms/createCallAlarm",
+        {
+          title: alarm.title,
+          datetime: alarm.datetime,
+          notifications: alarm.notifications,
+          contactInfo: alarm.contactInfo,
         },
-      });
-
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+  
       console.log("Alarm added successfully", alarm);
       await fetchAlarms(); // Refresh alarms after adding
       setShowForm(false);
@@ -150,8 +189,25 @@ function MainApp() {
   };
 
   //to-do:backend implementation
-  const deleteAlarm = (id: string) => {
-    setAlarms(alarms.filter(alarm => alarm.id !== id));
+  const deleteAlarm = async (id: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // Don't proceed if no user is logged in
+
+    try {
+      // Send DELETE request to backend
+      const response = await axios.delete(`http://localhost:5000/alarms/delete/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log(response.data.message); // "Alarm deleted successfully"
+      
+      // Remove alarm from state
+      setAlarms((prevAlarms) => prevAlarms.filter((alarm) => alarm._id !== id));
+    } catch (error) {
+      console.error("Error deleting alarm:", error);
+    }
   };
 
 
@@ -190,7 +246,7 @@ function MainApp() {
 
             <div className="space-y-4">
               {alarms.map((alarm) => (
-                <AlarmCard key={alarm.id} alarm={alarm} onDelete={deleteAlarm} />
+                <AlarmCard key={alarm._id} alarm={alarm} onDelete={deleteAlarm} />
               ))}
             </div>
           </div>
@@ -216,8 +272,9 @@ function AlarmForm({ onSubmit, onCancel }: { onSubmit: (alarm: Alarm) => void, o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    //invokes addAlarm function from MainApp component
     onSubmit({
-      id: Date.now().toString(),
+      //_id: Date.now().toString(),
       title: formData.title || '',
       datetime: formData.datetime || '',
       notifications: formData.notifications!,
@@ -343,7 +400,7 @@ function AlarmCard({ alarm, onDelete }: { alarm: Alarm, onDelete: (id: string) =
           </div>
         </div>
         <button
-          onClick={() => onDelete(alarm.id)}
+          onClick={() => alarm._id && onDelete(alarm._id)}
           className="text-gray-500 hover:text-red-400 transition-colors p-2 hover:bg-gray-700/50 rounded-lg"
         >
           <Trash2 size={20} />
