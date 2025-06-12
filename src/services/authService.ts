@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://remind-mi-backend.vercel.app';
 
 export const authService = {
   async login(email: string, password: string) {
