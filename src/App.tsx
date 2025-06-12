@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Phone, MessageSquare, Plus, Trash2, Calendar, Clock, Lock, User } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -11,6 +11,9 @@ function Login({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState("");
+
+
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +29,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
     }
   };
 
+  //UI of login page
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-1 relative flex items-center justify-center">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
@@ -118,38 +122,7 @@ function MainApp() {
     fetchAlarms();
   }, []);
 
-  // Function to add an alarm
-  // const addAlarm = async (alarm: Alarm) => {
 
-
-  //   if (!alarm.notifications?.call) {
-  //     console.log("Call notification is not enabled, skipping API request.");
-  //     return;
-  //   }
-
-  //   console.log(localStorage.getItem("token"));
-
-  //   // Make API request to add alarm
-  //   try {
-  //     await axios.post("http://localhost:5000/alarms/createCallAlarm", {
-  //       title: alarm.title,
-  //       datetime: alarm.datetime,
-  //       notifications: alarm.notifications,
-  //       contactInfo: alarm.contactInfo,
-  //     },
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //       },
-  //     });
-
-  //     console.log("Alarm added successfully", alarm);
-  //     await fetchAlarms(); // Refresh alarms after adding
-  //     setShowForm(false);
-  //   } catch (error) {
-  //     console.error("Error adding alarm:", error);
-  //   }
-  // };
   const addAlarm = async (alarm: Alarm) => {
     const notifications = alarm.notifications;
   
@@ -211,7 +184,7 @@ function MainApp() {
   };
 
 
-// MainApp component
+// MainApp component (UI of main page)
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-1 relative">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
@@ -282,6 +255,18 @@ function AlarmForm({ onSubmit, onCancel }: { onSubmit: (alarm: Alarm) => void, o
     });
   };
 
+
+  
+
+const inputRef = useRef<HTMLInputElement>(null); // ✅ Add this type
+
+  const handleWrapperClick = () => {
+    if (inputRef.current) {
+      inputRef.current.showPicker?.(); // Safe modern trigger
+      inputRef.current.focus();        // Fallback
+    } };
+  
+
   return (
     <form onSubmit={handleSubmit} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-purple-500/20">
       <div className="space-y-4">
@@ -297,7 +282,7 @@ function AlarmForm({ onSubmit, onCancel }: { onSubmit: (alarm: Alarm) => void, o
           />
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">Date & Time</label>
           <input
             type="datetime-local"
@@ -306,7 +291,27 @@ function AlarmForm({ onSubmit, onCancel }: { onSubmit: (alarm: Alarm) => void, o
             value={formData.datetime || ''}
             onChange={e => setFormData({ ...formData, datetime: e.target.value })}
           />
-        </div>
+        </div> */}
+
+      <div>
+      <label className="block text-sm font-medium text-gray-300 mb-1">Date & Time</label>
+      <div
+        className="relative cursor-pointer"
+        onClick={handleWrapperClick}
+      >
+        <input
+          ref={inputRef}
+          type="datetime-local"
+          required
+          className="w-full px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          value={formData.datetime || ''}
+          onChange={e => setFormData({ ...formData, datetime: e.target.value })}
+        />
+        <span className="absolute inset-y-0 right-3 flex items-center text-gray-400">
+          🕒
+        </span>
+      </div>
+    </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Notification Methods</label>
