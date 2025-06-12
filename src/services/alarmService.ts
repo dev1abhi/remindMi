@@ -26,11 +26,14 @@ export const alarmService = {
   },
 
   async createAlarm(alarm: Alarm): Promise<void> {
+    
+    //saving in UTC format
+    const utcDateTime = new Date(alarm.datetime).toISOString();
     await axios.post(
       `${API_BASE_URL}/alarms/createCallAlarm`,
       {
         title: alarm.title,
-        datetime: alarm.datetime,
+        datetime: utcDateTime,
         notifications: alarm.notifications,
         contactInfo: alarm.contactInfo,
       },

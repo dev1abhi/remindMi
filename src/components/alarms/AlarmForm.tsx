@@ -121,7 +121,7 @@ export function AlarmForm({ onSubmit, onCancel }: AlarmFormProps) {
               ...formData,
               contactInfo: { ...formData.contactInfo!, phone: e.target.value }
             })}
-            placeholder="+1234567890"
+            placeholder="+91............"
           />
         </div>
       </div>

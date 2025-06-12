@@ -16,6 +16,11 @@ export function AlarmCard({ alarm, onDelete }: AlarmCardProps) {
     call: <Phone size={16} />
   };
 
+  //console.log(alarm.datetime);
+  //console.log(format(new Date(alarm.datetime), "MMM d, yyyy h:mm a"));
+
+ 
+
   return (
     <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-300">
       <div className="flex justify-between items-start">

@@ -30,13 +30,25 @@ export function handleApiError(error: unknown, onTokenExpired?: () => void): voi
   }
 
   // Handle other API errors
+  // if (error instanceof Error && 'response' in error) {
+  //   const axiosError = error as AxiosError<{ message: string }>;
+  //   const message = axiosError.response?.data?.error || 'An error occurred';
+  //   toast.error(message);
+  // } else if (error instanceof Error) {
+  //   toast.error(error.message);
+  // } else {
+  //   toast.error('An unexpected error occurred');
+  // }
+
   if (error instanceof Error && 'response' in error) {
-    const axiosError = error as AxiosError<{ message: string }>;
-    const message = axiosError.response?.data?.message || 'An error occurred';
-    toast.error(message);
-  } else if (error instanceof Error) {
-    toast.error(error.message);
-  } else {
-    toast.error('An unexpected error occurred');
-  }
+  const axiosError = error as AxiosError<{ error: string }>;
+  const message = axiosError.response?.data?.error || 'An error occurred';
+  toast.error(message);
+} else if (error instanceof Error) {
+  toast.error(error.message);
+} else {
+  toast.error('An unexpected error occurred');
+}
+
+
 }
