@@ -1,6 +1,7 @@
 import React from 'react';
 import { Login } from './components/auth/Login';
 import { Dashboard } from './pages/Dashboard';
+import { Toast } from './components/ui/Toast';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -14,11 +15,16 @@ function App() {
     );
   }
 
-  if (!isLoggedIn) {
-    return <Login onLogin={checkAuthStatus} />;
-  }
-
-  return <Dashboard />;
+  return (
+    <>
+      <Toast />
+      {!isLoggedIn ? (
+        <Login onLogin={checkAuthStatus} />
+      ) : (
+        <Dashboard />
+      )}
+    </>
+  );
 }
 
 export default App;

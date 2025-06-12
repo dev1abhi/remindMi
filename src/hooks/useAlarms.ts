@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { alarmService } from '../services/alarmService';
+import { handleApiError } from '../utils/errorHandler';
+import { useAuth } from './useAuth';
 import type { Alarm } from '../types';
+import toast from 'react-hot-toast';
 
 export function useAlarms() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { handleSessionExpired } = useAuth();
 
   const fetchAlarms = async () => {
     const token = localStorage.getItem("token");
@@ -19,6 +23,7 @@ export function useAlarms() {
       setAlarms(fetchedAlarms);
     } catch (err) {
       console.error("Error fetching alarms:", err);
+      handleApiError(err, handleSessionExpired);
       setError("Failed to fetch alarms");
     } finally {
       setIsLoading(false);
@@ -30,17 +35,17 @@ export function useAlarms() {
     const isAnyNotificationEnabled = notifications?.call || notifications?.sms || notifications?.email;
 
     if (!isAnyNotificationEnabled) {
-      console.log("No notification methods are enabled, skipping API request.");
+      toast.error("Please select at least one notification method");
       return;
     }
 
     try {
       await alarmService.createAlarm(alarm);
-      console.log("Alarm added successfully", alarm);
+      toast.success("Alarm created successfully!");
       await fetchAlarms(); // Refresh alarms after adding
     } catch (error) {
       console.error("Error adding alarm:", error);
-      setError("Failed to add alarm");
+      handleApiError(error, handleSessionExpired);
       throw error;
     }
   };
@@ -49,9 +54,10 @@ export function useAlarms() {
     try {
       await alarmService.deleteAlarm(id);
       setAlarms((prevAlarms) => prevAlarms.filter((alarm) => alarm._id !== id));
+      toast.success("Alarm deleted successfully!");
     } catch (error) {
       console.error("Error deleting alarm:", error);
-      setError("Failed to delete alarm");
+      handleApiError(error, handleSessionExpired);
       throw error;
     }
   };

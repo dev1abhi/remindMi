@@ -9,19 +9,21 @@ interface LoginProps {
 export function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setIsLoading(true);
 
     try {
       await login(email, password);
       onLogin();
     } catch (err) {
+      // Error handling is done in the useAuth hook
       console.error(err);
-      setError("Invalid email or password");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -38,12 +40,6 @@ export function Login({ onLogin }: LoginProps) {
           remindMi
         </h2>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-300 text-sm">
-            {error}
-          </div>
-        )}
-        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
@@ -54,7 +50,8 @@ export function Login({ onLogin }: LoginProps) {
               <input
                 type="email"
                 required
-                className="block w-full pl-10 px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-500"
+                disabled={isLoading}
+                className="block w-full pl-10 px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -70,7 +67,8 @@ export function Login({ onLogin }: LoginProps) {
               <input
                 type="password"
                 required
-                className="block w-full pl-10 px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-500"
+                disabled={isLoading}
+                className="block w-full pl-10 px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -79,9 +77,14 @@ export function Login({ onLogin }: LoginProps) {
           </div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-200"
+            disabled={isLoading}
+            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Sign In
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
       </div>
