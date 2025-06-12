@@ -1,2 +1,2 @@
 # remindMi
-..
+Reminder app
